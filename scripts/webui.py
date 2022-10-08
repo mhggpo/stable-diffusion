@@ -123,10 +123,22 @@ def chunk(it, size):
     it = iter(it)
     return iter(lambda: tuple(islice(it, size)), ())
 
+def load_model_without_module(model_state_file):
+    from collections import OrderedDict
+    new_checkpoint = OrderedDict()
+    checkpoint = torch.load(model_state_file)['state_dict']
+    print(checkpoint.keys())
+    import pdb; pdb.set_trace()
+    for k, v in checkpoint.items():
+        name = k[7:] # remove module.
+        new_checkpoint[name] = v
+    return new_checkpoint
+
 
 def load_model_from_config(config, ckpt, verbose=False):
     print(f"Loading model from {ckpt}")
-    pl_sd = torch.load(ckpt, map_location="cpu")
+    #pl_sd = torch.load(ckpt, map_location="cpu")
+    pl_sd=load_model_without_module(ckpt)
     if "global_step" in pl_sd:
         print(f"Global Step: {pl_sd['global_step']}")
     sd = pl_sd["state_dict"]
@@ -145,7 +157,8 @@ def load_model_from_config(config, ckpt, verbose=False):
 
 def load_sd_from_config(ckpt, verbose=False):
     print(f"Loading model from {ckpt}")
-    pl_sd = torch.load(ckpt, map_location="cpu")
+    #pl_sd = torch.load(ckpt, map_location="cpu")
+    pl_sd=load_model_without_module(ckpt)
     if "global_step" in pl_sd:
         print(f"Global Step: {pl_sd['global_step']}")
     sd = pl_sd["state_dict"]
